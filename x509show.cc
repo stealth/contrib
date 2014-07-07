@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string>
 #include <cerrno>
+#include <unistd.h>
+#include <stdint.h>
 extern "C" {
 #include <openssl/ssl.h>
 #include <openssl/err.h>
@@ -87,6 +89,7 @@ int do_SSL(int fd)
 		fprintf(stderr, "SSL_CTX_set_default_verify_paths: %s\n", ERR_error_string(ERR_get_error(), NULL));
 		return -1;
 	}
+
 #define CIPHER_LIST "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH"
 
 	SSL_CTX_set_verify(ssl_ctx,
@@ -105,7 +108,7 @@ int do_SSL(int fd)
 		return -1;
 	SSL_set_fd(ssl, fd);
 	if (SSL_connect(ssl) <= 0) {
-		fprintf(stderr, "SSL_connect failed\n");
+		fprintf(stderr, "SSL_connect failed: %s\n", ERR_error_string(ERR_get_error(), NULL));
 		return -1;
 	}
 
@@ -138,7 +141,7 @@ void die(const char *msg)
 }
 
 
-int tcp_connect(const char *host, u_short port = 443)
+int tcp_connect(const char *host, uint16_t port = 443)
 {
 	int sock = -1, r = -1;
 	char service[20];
@@ -167,8 +170,11 @@ int main(int argc, char **argv)
 		printf("\nUsage: %s <IP or hostname>|less\n\n", argv[0]);
 		return 1;
 	}
+	uint16_t port = 443;
+	if (argc == 3)
+		port = atoi(argv[2]);
 
-	int fd = tcp_connect(argv[1], 443);
+	int fd = tcp_connect(argv[1], port);
 	printf("\noverall result: %d\nHuman readable X509 chain follows:\n\n", do_SSL(fd));
 
 
