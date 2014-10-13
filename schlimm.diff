@@ -1,0 +1,25 @@
+diff --git a/replacements.c b/replacements.c
+index bac5e5d..02a4c14 100644
+--- a/replacements.c
++++ b/replacements.c
+@@ -71,7 +71,11 @@ unhook_system_services(void)
+ {
+ 	if (insecure_mode)
+ 		return;
++	Print(L"schlimm: tampered systab=%x, system_start_image=%x\n", systab, system_start_image);
++
+ 	systab->BootServices->Exit = system_exit;
++
++	// schlimm: boom goes here
+ 	systab->BootServices->StartImage = system_start_image;
+ 	systab->BootServices->ExitBootServices = system_exit_boot_services;
+ }
+@@ -127,6 +131,8 @@ hook_system_services(EFI_SYSTEM_TABLE *local_systab)
+ 		return;
+ 	systab = local_systab;
+ 
++	Print(L"schlimm: orig systab=%x (&systab=%x)\n", systab, &systab);
++
+ 	/* We need to hook various calls to make this work... */
+ 
+ 	/* we need StartImage() so that we can allow chain booting to an
